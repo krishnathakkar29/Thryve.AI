@@ -3,6 +3,7 @@ import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import { cookieOptions } from "../constants/cookie-options.js";
 import { sendToken } from "../lib/token.js";
+import { uploadFilesToCloudinary } from "../lib/cloudinary.js";
 
 export const newUser = TryCatch(async (req, res, next) => {
   const { name, email, password, role, teamId } = req.body;
@@ -79,5 +80,36 @@ export const getMyProfile = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     user,
+  });
+});
+
+export const updateProfile = TryCatch(async (req, res, next) => {
+  const { name, email } = req.body;
+  const userId = req.user;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ErrorHandler(404, "User not found"));
+  }
+
+  // Update name and email if provided
+  if (name) user.name = name;
+  if (email) user.email = email;
+
+  if (req.files && req.files.profileImage) {
+    const files = [req.files.profileImage[0]];
+    const uploadedFiles = await uploadFilesToCloudinary([files]);
+    console.log(uploadedFiles);
+    if (uploadedFiles.length > 0) {
+      user.avatar = uploadedFiles[0].url; // Update the avatar URL
+    }
+  }
+
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    user,
+    message: "profile created successfully",
   });
 });

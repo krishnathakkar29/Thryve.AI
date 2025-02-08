@@ -1,7 +1,16 @@
-import React, { useState } from "react";
-import defaultimg1 from '../assets/Vector.png';
+import React, { useEffect, useState } from "react";
+import defaultimg1 from "../assets/Vector.png";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { api } from "@/App";
+import { useFileHandler } from "6pp";
 
 function Profile() {
+  const { data: authUser } = useQuery({
+    queryKey: ["authUser"],
+  });
+  const queryClient = new QueryClient();
+
   const defaultImage = defaultimg1;
   const [profileImage, setProfileImage] = useState(defaultImage);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -13,11 +22,66 @@ function Profile() {
     team: "Team --Force",
   });
 
+
+  useEffect(() => {
+    if (authUser) {
+      console.log(authUser.user.name);
+      setDetails({
+        name: authUser.user.name || "",
+        email: authUser.user.email || "",
+        role: authUser.user.role || "Intern",
+        team: authUser.user.team || "Team --Force",
+      });
+      setProfileImage(authUser.avatar || defaultImage);
+    }
+  }, [authUser]);
+
+  const { mutate: updateProfile, isPending } = useMutation({
+    mutationFn: async (formData) => {
+      console.log(formData);
+      const response = await api.put("/api/user/profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate the authUser query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      toast.success("Profile updated successfully!");
+    },
+    onError: (error) => {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    },
+  });
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
+      // Show preview immediately
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfileImage(reader.result);
+        formData.append("profileImage", reader.result);
+      };
+      reader.readAsDataURL(file)
+
+      // const imageUrl = URL.createObjectURL(file);
+      // setProfileImage(imageUrl);
+      // console.log(imageUrl);
+
+      // Prepare FormData with current authUser data
+      const formData = new FormData();
+      formData.append("name", Details.name); // Use current form data (or authUser.user.name if you want original data)
+      formData.append("email", Details.email); // Use current form data (or authUser.user.email)
+      formData.append("profileImage", profileImage);
+
+      console.log(formData);
+
+      // Trigger the mutation
+      updateProfile(formData);
     }
   };
 
@@ -37,18 +101,33 @@ function Profile() {
     }));
   };
 
+  // const handleSave = () => {
+  //   console.log("Updated Details:", Details);
+  // setIsEditingName(false);
+  // setIsEditingEmail(false);
+  // };
+
   const handleSave = () => {
-    console.log("Updated Details:", Details); 
-    setIsEditingName(false);
+    const formData = new FormData();
+    formData.append("name", Details.name);
+    formData.append("email", Details.email);
+
+    const profileImageInput = document.getElementById("profileImage");
+    if (profileImageInput.files[0]) {
+      formData.append("profileImage", profileImageInput.files[0]);
+    }
+
+    updateProfile(formData);
+
     setIsEditingEmail(false);
+    setIsEditingName(false);
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-[#FEFBF6] mt-0 py-6">
-
       <h2 className="text-lg font-semibold text-center mb-6 text-[#000000]">
-          Edit Profile
-        </h2>
+        Edit Profile
+      </h2>
 
       <div className="relative mb-6">
         <div className="h-28 w-28 rounded-full bg-gray-200 overflow-hidden border border-gray-300">
@@ -92,7 +171,6 @@ function Profile() {
       </div>
 
       <div className="w-full max-w-2xl px-6 py-4 bg-[#FEFBF6]">
-        
         <div className="space-y-6">
           <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md">
             <div className="w-full">
@@ -112,7 +190,7 @@ function Profile() {
             <button
               onClick={() => {
                 if (isEditingName) {
-                  handleSave(); 
+                  handleSave();
                 } else {
                   toggleEditField("name");
                 }
@@ -176,7 +254,7 @@ function Profile() {
             <button
               onClick={() => {
                 if (isEditingEmail) {
-                  handleSave(); 
+                  handleSave();
                 } else {
                   toggleEditField("email");
                 }
