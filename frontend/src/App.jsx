@@ -6,6 +6,7 @@ import Chat from "./pages/Chat";
 import SignIn from "./pages/signin";
 import SignUp from "./pages/signup";
 import Dashboard from "./pages/Dashboard";
+import News from "./pages/News";
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/chat" element={<Chat />} />
-              <Route path="/news" element={<Chat />} />
+              <Route path="/news" element={<News />} />
             </Route>
           </Route>
           <Route path="/signup" element={<SignUp />} />
