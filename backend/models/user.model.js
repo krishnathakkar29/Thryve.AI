@@ -18,13 +18,12 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["Intern", "Employee", "Manager", "HR"],
+      enum: ["Intern", "Employee", "Manager", "HR", "CEO"],
       required: true,
     },
     teamId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
-      required: true,
     },
     avatar: {
       type: String,

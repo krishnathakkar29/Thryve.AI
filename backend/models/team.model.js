@@ -5,12 +5,13 @@ const teamSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      unique: true,
     },
     teamIcon: {
       type: String,
     },
     manager: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },

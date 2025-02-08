@@ -7,14 +7,21 @@ import { sendToken } from "../lib/token.js";
 export const newUser = TryCatch(async (req, res, next) => {
   const { name, email, password, role, teamId } = req.body;
 
+  console.count("newUser");
   if (!name || !email || !password || !role || !teamId) {
     return next(new ErrorHandler("All fields are required", 400));
   }
+
+  console.count("newUser");
+
 
   const userExists = await User.findOne({ email });
   if (userExists) {
     return next(new ErrorHandler("User already exists", 400));
   }
+
+  console.count("newUser");
+
 
   const user = await User.create({
     name,
@@ -23,6 +30,9 @@ export const newUser = TryCatch(async (req, res, next) => {
     role,
     teamId,
   });
+
+
+  console.count("newUser");
 
   sendToken(res, user, 201, "User registered successfully");
 });

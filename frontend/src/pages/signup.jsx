@@ -1,23 +1,97 @@
 import React, { useState } from "react";
 import signupImage from "../gif/ideas.gif"; // Update the path as necessary
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import axios from "axios";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "", // Changed from fullName to name to match backend
     email: "",
     role: "",
-    team: "",
+    teamId: "", // Using only teamId, removed team
     password: "",
   });
 
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const {
+    mutate: signupMutation,
+    isError,
+    error: signupError,
+    isPending,
+  } = useMutation({
+    mutationFn: async (credentials) => {
+      console.log("credentials");
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/new`,
+          credentials,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        throw new Error(
+          error.response?.data?.message || "Something went wrong during sign in"
+        );
+      }
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Signed in successfully");
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      navigate("/dashboard");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to sign in");
+    },
+  });
+
+  const {
+    data: teamsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/team/getteams`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch teams");
+      }
+      const data = await response.json();
+
+      return data.teams;
+    },
+  });
+
+  const roles = ["Intern", "Employee", "Manager", "HR", "CEO"];
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
+    signupMutation({
+      email: formData.email,
+      password: formData.password,
+      name: formData.name,
+      role: formData.role,
+      teamId: formData.teamId,
+    });
   };
 
   return (
@@ -38,19 +112,19 @@ const SignUp = () => {
             <h1 className="text-4xl font-bold text-[#0D4C92]">Sign Up</h1>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Full Name */}
+            {/* Name */}
             <div>
               <label
-                htmlFor="fullName"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-900"
               >
                 Full Name
               </label>
               <input
-                id="fullName"
-                name="fullName"
+                id="name"
+                name="name"
                 type="text"
-                value={formData.fullName}
+                value={formData.name}
                 onChange={handleChange}
                 required
                 placeholder="Enter your full name"
@@ -86,42 +160,53 @@ const SignUp = () => {
               >
                 Role
               </label>
-            <input
-            id="role"
-            name="role"
-            type="text"
-            value={formData.role}
-            onChange={handleChange}
-            required
-            placeholder="Enter your role"
-            className="w-full px-4 py-2 rounded-lg bg-[#EDE7DB] text-black border border-gray-300 shadow-[6px_6px_0_0_#0D4C92] focus:outline-none focus:ring-2 focus:ring-[#0D4C92]"
-            />
-
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-lg bg-[#EDE7DB] text-black border border-gray-300 shadow-[6px_6px_0_0_#0D4C92] focus:outline-none focus:ring-2 focus:ring-[#0D4C92]"
+              >
+                <option value="">Select Role</option>
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Team */}
             <div>
               <label
-                htmlFor="team"
+                htmlFor="teamId"
                 className="block text-sm font-medium text-gray-900"
               >
                 Team
               </label>
               <select
-                id="team"
-                name="team"
-                value={formData.team}
+                id="teamId"
+                name="teamId"
+                value={formData.teamId}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 rounded-lg bg-[#EDE7DB] text-black border border-gray-300 shadow-[6px_6px_0_0_#0D4C92] focus:outline-none focus:ring-2 focus:ring-[#0D4C92]"
               >
-                <option value="" disabled>
-                  Select Team
+                <option value="">
+                  {isLoading ? "Loading teams..." : "Select Team"}
                 </option>
-                <option value="Engineering">Engineering</option>
-                <option value="Design">Design</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Sales">Sales</option>
+                {error ? (
+                  <option value="" disabled>
+                    Error loading teams
+                  </option>
+                ) : (
+                  teamsData?.map((team) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -141,7 +226,7 @@ const SignUp = () => {
                 onChange={handleChange}
                 required
                 placeholder="Enter your password"
-                className="w-full px-4 py-2 rounded-lg bg-[#EDE7DB]  text-black border border-gray-300 shadow-[6px_6px_0_0_#0D4C92] focus:outline-none focus:ring-2 focus:ring-[#0D4C92]"
+                className="w-full px-4 py-2 rounded-lg bg-[#EDE7DB] text-black border border-gray-300 shadow-[6px_6px_0_0_#0D4C92] focus:outline-none focus:ring-2 focus:ring-[#0D4C92]"
               />
             </div>
 
@@ -150,8 +235,9 @@ const SignUp = () => {
               <button
                 type="submit"
                 className="w-1/3 bg-[#0D4C92] text-white py-2 rounded-full text-base font-semibold hover:bg-[#083B71] focus:outline-none focus:ring-2 focus:ring-[#083B71] focus:ring-offset-2"
+                disabled={isPending}
               >
-                Sign Up
+                {isPending ? "Signing up..." : "Sign Up"}
               </button>
             </div>
 
