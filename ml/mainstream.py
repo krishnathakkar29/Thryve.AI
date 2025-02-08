@@ -1,27 +1,47 @@
 import streamlit as st
 import requests
 
-# Backend API URL (Replace with your actual Flask API URL)
-API_URL = "http://localhost:5000/route_request"
+BACKEND_URL = "http://localhost:5000/route_request"
 
-st.title("AI Assistant Router")
+st.title("AI-Powered Query & Meeting Minutes Generator")
 
-st.write("Enter your question below, and the system will determine the appropriate agent.")
+# File Upload for Meeting Minutes
+st.header("Upload a PDF for Meeting Minutes")
+uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
 
-# User input
-user_question = st.text_area("Your Question")
+if uploaded_file:
+    st.write("Processing your file...")
 
-if st.button("Get Answer"):
-    if user_question.strip():
-        try:
-            response = requests.post(API_URL, json={"question": user_question})
-            if response.status_code == 200:
-                data = response.json()
-                st.success("Response:")
-                st.json(data)
-            else:
-                st.error(f"Error: {response.json().get('error', 'Unknown error')}")
-        except Exception as e:
-            st.error(f"Request failed: {str(e)}")
+    # Send the file to the backend
+    files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
+    response = requests.post(BACKEND_URL, files=files)
+
+    if response.status_code == 200:
+        st.success("Meeting minutes generated successfully!")
+        st.download_button(
+            label="Download Minutes PDF",
+            data=response.content,
+            file_name="meeting_minutes.pdf",
+            mime="application/pdf",
+        )
     else:
-        st.warning("Please enter a question before submitting.")
+        st.error("Error generating minutes: " + response.text)
+
+# Text Input for Query Classification
+st.header("Ask a Question")
+user_question = st.text_input("Enter your query:")
+
+if st.button("Submit Query"):
+    if user_question.strip():
+        # Send the query to the backend
+        response = requests.post(BACKEND_URL, json={"question": user_question})
+        
+        if response.status_code == 200:
+            st.success("Response Received:")
+            st.json(response.json())
+        else:
+            st.error("Error: " + response.text)
+    else:
+        st.warning("Please enter a valid question.")
+
+st.write("🚀 Powered by AI & Flask Backend")
