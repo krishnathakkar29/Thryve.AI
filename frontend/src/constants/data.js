@@ -1,29 +1,40 @@
+import home from '../gif/home.png'
+import nameAi from '../gif/nameAi.png'
+import policy from '../gif/policy.png'
+import file from '../gif/file.png'
+import headset from '../gif/headset.png'
+import setting from '../gif/settings.png'
+
 export const data = {
   versions: ["1.0.1"],
   navMain: [
     {
-      // title: "Overview",
       url: "/dashboard",
       items: [
         {
-          title: "Dashboard",
-          url: "/dashboard",
+          title: "Home",
+          url: "/home",
+          img: home, // Use imported image directly
         },
         {
-          title: "Dashboard",
-          url: "/dashboard",
+          title: "Name Of AI",
+          url: "/nameAi",
+          img: nameAi,
         },
         {
-          title: "Dashboard",
-          url: "/dashboard",
+          title: "HR policies",
+          url: "/policy",
+          img: policy,
         },
         {
-          title: "Dashboard",
-          url: "/dashboard",
+          title: "File Manager",
+          url: "/file",
+          img: file,
         },
         {
-          title: "Dashboard",
-          url: "/dashboard",
+          title: "Tech Support",
+          url: "/support",
+          img: headset,
         },
       ],
     },

@@ -36,15 +36,15 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%} */
-
-    --sidebar-background: 209 100% 26%; /* Deep blue color */
+    --sidebar-background: 210 95% 28%; /* Deep blue color matching #0D578C */
     --sidebar-foreground: 0 0% 100%; /* White text */
     --sidebar-primary: 0 0% 100%; /* White for primary elements */
-    --sidebar-primary-foreground: 209 100% 26%; /* Deep blue for contrast */
-    --sidebar-accent: 209 100% 31%; /* Slightly lighter blue for hover */
+    --sidebar-primary-foreground: 210 95% 28%; /* Deep blue for contrast */
+    --sidebar-accent: 210 90% 36%; /* Slightly lighter blue for hover */
     --sidebar-accent-foreground: 0 0% 100%; /* White text on hover */
-    --sidebar-border: 209 100% 31%; /* Slightly lighter blue for borders */
-    --sidebar-ring: 209 100% 40%; /* Light blue for focus rings */
+    --sidebar-border: 210 90% 36%; /* Slightly lighter blue for borders */
+    --sidebar-ring: 210 85% 45%; /* Light blue for focus rings */
+    
   }
   .dark {
     --background: 222.2 84% 4.9%;
