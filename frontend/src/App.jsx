@@ -61,6 +61,10 @@ function App() {
               path="/dashboard"
               element={authUser ? <Dashboard /> : <Navigate to="/signin" />}
             />
+             <Route
+              path="/report"
+              element={authUser ? <Report /> : <Navigate to="/signin" />}
+            />
             <Route
               path="/chat"
               element={authUser ? <Chat /> : <Navigate to="/signin" />}
