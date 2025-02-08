@@ -22,7 +22,7 @@ function Layout({ children }) {
               <DashboardBreadCrumb />
             </div>
           </header>
-          <main className="flex-1 overflow-hidden bg-red-400">
+          <main className="flex-1 overflow-hidden">
             <Outlet />
           </main>
         </div>
