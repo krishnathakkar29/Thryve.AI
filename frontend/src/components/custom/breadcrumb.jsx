@@ -34,7 +34,7 @@ export default function DashboardBreadCrumb() {
     return "/" + path.slice(0, i + 1).join("/");
   }
   function isActive(i) {
-    return getPath(i) === pathname;
+    return getPath(i) === location.pathname;
   }
   return (
     <Breadcrumb>

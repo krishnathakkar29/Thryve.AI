@@ -1,10 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
-import SignUp from "./pages/signup";
-import SignIn from "./pages/signin";
 import { Toaster } from "./components/ui/sonner";
-import Home from "./pages/Home";
 import Layout from "./layout/layout";
+import Chat from "./pages/Chat";
+import SignIn from "./pages/signin";
+import SignUp from "./pages/signup";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -14,7 +15,9 @@ function App() {
         <Routes>
           <Route>
             <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/news" element={<Chat />} />
             </Route>
           </Route>
           <Route path="/signup" element={<SignUp />} />
