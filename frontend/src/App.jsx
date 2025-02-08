@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import SignIn from "./pages/signin";
 import SignUp from "./pages/signup";
 import Task from "./pages/Task";
+import Report from "./pages/Report";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import ProtectRoute from "./layout/protect-route";
