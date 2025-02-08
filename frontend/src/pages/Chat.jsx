@@ -1,21 +1,23 @@
+import React, { useEffect, useRef, useState } from "react";
 import MessageComponent from "@/components/chat/MessageComponent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { File, Send } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import userAvatar from "../assets/avatar.png"; // User's avatar
+import botAvatar from "../assets/avatar.png"; // Bot's avatar
 
 function Chat() {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "sdfa;klsndfasbdbsfdabfbsudafsuidghauigh hsfdiuhfuisaduifuiasdfhoasidfhsuieahcisdahcuiosdahiughihfgssdfa;",
+      text: "Hi, I am AssistantX! How can I help you today?",
       sender: "bot",
       timestamp: new Date(),
     },
   ]);
+
   const [inputMessage, setInputMessage] = useState("");
-  const scrollAreaRef = useRef(null);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -41,8 +43,15 @@ function Chat() {
   const mockUser = {
     id: "1",
     name: "John Doe",
-    avatar: "https://github.com/shadcn.png",
+    avatar: userAvatar,
   };
+
+  const mockBot = {
+    id: "bot",
+    name: "AssistantX",
+    avatar: botAvatar,
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       <ScrollArea className="flex-1 px-4">
@@ -51,7 +60,7 @@ function Chat() {
             <MessageComponent
               key={message.id}
               message={message}
-              user={mockUser}
+              user={message.sender === "bot" ? mockBot : mockUser}
             />
           ))}
           <div ref={bottomRef} />
@@ -72,7 +81,7 @@ function Chat() {
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Type your message here..."
-            className="flex-1"
+            className="flex-1 rounded-full"
           />
           <Button
             type="submit"

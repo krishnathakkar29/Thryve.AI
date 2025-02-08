@@ -27,7 +27,7 @@ const MessageComponent = ({ message, user }) => {
         >
           {!isUser && (
             <span className="text-sm font-medium text-muted-foreground">
-              ChatGPT
+             AI name
             </span>
           )}
           <div
