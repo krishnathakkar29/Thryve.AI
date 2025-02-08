@@ -14,14 +14,12 @@ export const newUser = TryCatch(async (req, res, next) => {
 
   console.count("newUser");
 
-
   const userExists = await User.findOne({ email });
   if (userExists) {
     return next(new ErrorHandler("User already exists", 400));
   }
 
   console.count("newUser");
-
 
   const user = await User.create({
     name,
@@ -31,7 +29,6 @@ export const newUser = TryCatch(async (req, res, next) => {
     teamId,
   });
 
-
   console.count("newUser");
 
   sendToken(res, user, 201, "User registered successfully");
@@ -40,21 +37,30 @@ export const newUser = TryCatch(async (req, res, next) => {
 export const login = TryCatch(async (req, res, next) => {
   const { email, password } = req.body;
 
+  console.count("login");
   if (!email || !password) {
     return next(new ErrorHandler("Email and password are required", 400));
   }
+
+  console.count("login");
 
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
 
+  console.count("login");
+
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
 
+  console.count("login");
+
   sendToken(res, user, 200, "User logged in successfully");
+
+  console.count("login");
 });
 
 export const logout = TryCatch(async (req, res, next) => {

@@ -4,6 +4,7 @@ import { Team } from "./models/team.model.js";
 import { Todo } from "./models/todo.model.js";
 import { connectDB } from "./lib/db.js";
 import bcrypt from "bcrypt";
+import { Task } from "./models/task.model.js";
 
 // Connect to the database
 
@@ -135,5 +136,70 @@ const seedDatabase = async () => {
   }
 };
 
+export const seedTasks = async () => {
+  try {
+    const managerId = "67a795a267e9b517a78dd494";
+    const internId = "67a795a167e9b517a78dd48a";
+
+    // Define the tasks
+    const tasks = [
+      {
+        title: "Create API Documentation",
+        description:
+          "Document all the REST API endpoints using Swagger/OpenAPI specification. Include request/response examples and authentication details.",
+        assignedTo: internId,
+        assignedBy: managerId,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        priority: "High",
+        status: "Open",
+      },
+      {
+        title: "Implement User Dashboard",
+        description:
+          "Develop the frontend components for the user dashboard including profile section, activity feed, and notification panel using React.",
+        assignedTo: internId,
+        assignedBy: managerId,
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+        priority: "Medium",
+        status: "Open",
+      },
+      {
+        title: "Unit Test Coverage",
+        description:
+          "Write comprehensive unit tests for the backend services. Aim for at least 80% coverage using Jest testing framework.",
+        assignedTo: internId,
+        assignedBy: managerId,
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        priority: "Low",
+        status: "Open",
+      },
+    ];
+
+    await connectDB();
+
+    // Clear existing tasks for these users (optional)
+    await Task.deleteMany({
+      assignedTo: internId,
+      assignedBy: managerId,
+    });
+
+    // Create all tasks
+    const createdTasks = await Task.create(tasks);
+
+    // Populate the tasks with user details
+    const populatedTasks = await Task.populate(createdTasks, [
+      { path: "assignedTo", select: "name email" },
+      { path: "assignedBy", select: "name email" },
+    ]);
+
+    console.log("Tasks created successfully:", populatedTasks);
+    return populatedTasks;
+  } catch (error) {
+    console.error("Error seeding tasks:", error);
+    throw error;
+  }
+};
+
 // Run the seeder
-seedDatabase();
+// seedDatabase();
+seedTasks();

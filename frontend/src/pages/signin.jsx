@@ -5,6 +5,7 @@ import signinImage from "/src/gif/ac140a627af854f14c7f653efd7d53ae.gif";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import axios from "axios";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -22,12 +23,13 @@ const SignIn = () => {
     mutationFn: async (credentials) => {
       try {
         const response = await axios.post(
-          `${process.env.VITE_BACKEND_URL}/api/user/login`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/login`,
           credentials,
           { withCredentials: true }
         );
         return response.data;
       } catch (error) {
+        console.log(error);
         throw new Error(
           error.response?.data?.message || "Something went wrong during sign in"
         );

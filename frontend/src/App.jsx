@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { Toaster } from "./components/ui/sonner";
 import Layout from "./layout/layout";
@@ -44,41 +44,49 @@ function App() {
     },
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin size-10" />
+      </div>
+    );
+  }
+
   return (
     <>
       <Suspense fallback={<Loader2 className="animate-spine" size="md" />}>
         <Routes>
-          <Route>
+          <Route element={<Layout />}>
             <Route
-              element={
-                <ProtectRoute
-                  isAuthenticated={!!authUser}
-                  isLoading={isLoading}
-                />
-              }
-            >
-              <Route element={<Layout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/news" element={<News />} />
-                <Route path="/tasks" element={<Task />} />
-                <Route path="/profile" element={<Profile />} />
-              </Route>
-            </Route>
+              path="/dashboard"
+              element={authUser ? <Dashboard /> : <Navigate to="/signin" />}
+            />
+            <Route
+              path="/chat"
+              element={authUser ? <Chat /> : <Navigate to="/signin" />}
+            />
+            <Route
+              path="/news"
+              element={authUser ? <News /> : <Navigate to="/signin" />}
+            />
+            <Route
+              path="/tasks"
+              element={authUser ? <Task /> : <Navigate to="/signin" />}
+            />
+            <Route
+              path="/profile"
+              element={authUser ? <Profile /> : <Navigate to="/signin" />}
+            />
           </Route>
 
           <Route
-            element={
-              <ProtectRoute
-                isAuthenticated={!authUser}
-                isLoading={isLoading}
-                redirectPath="/dashboard"
-              />
-            }
-          >
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/signin" element={<SignIn />} />
-          </Route>
+            path="/signup"
+            element={!authUser ? <SignUp /> : <Navigate to="/dashboard" />}
+          />
+          <Route
+            path="/signin"
+            element={!authUser ? <SignIn /> : <Navigate to="/dashboard" />}
+          />
 
           {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>

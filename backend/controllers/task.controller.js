@@ -47,15 +47,19 @@ export const getTasksAssignedToUser = TryCatch(async (req, res, next) => {
 export const updateTaskStatus = TryCatch(async (req, res, next) => {
   const { status } = req.body;
   const { taskId } = req.params;
-
+  console.count("usfai");
   if (!status) {
     return next(new ErrorHandler("Please provide a status", 400));
   }
+  console.count("usfai");
+  console.log(status);
+  console.log(taskId);
 
   // Validate status enum
   const validStatuses = ["Open", "InProgress", "Completed", "Blocked"];
   if (!validStatuses.includes(status)) {
     return next(new ErrorHandler("Invalid status value", 400));
+    console.count("usfai");
   }
 
   // Get task and check if it exists
@@ -63,6 +67,7 @@ export const updateTaskStatus = TryCatch(async (req, res, next) => {
   if (!task) {
     return next(new ErrorHandler("Task not found", 404));
   }
+  console.count("usfai");
 
   // Check if the user is the assigned person
   if (task.assignedTo.toString() !== req.user) {
@@ -70,10 +75,12 @@ export const updateTaskStatus = TryCatch(async (req, res, next) => {
       new ErrorHandler("You can only update tasks assigned to you", 403)
     );
   }
+  console.count("usfai");
 
   // Update the task status
   task.status = status;
   await task.save();
+  console.count("usfai");
 
   res.status(200).json({
     success: true,
