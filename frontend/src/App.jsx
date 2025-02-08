@@ -8,6 +8,7 @@ import SignUp from "./pages/signup";
 import Dashboard from "./pages/Dashboard";
 import News from "./pages/News";
 import Task from "./pages/Task";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/chat" element={<Chat />} />
               <Route path="/news" element={<News />} />
               <Route path="/tasks" element={<Task />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
           </Route>
           <Route path="/signup" element={<SignUp />} />
