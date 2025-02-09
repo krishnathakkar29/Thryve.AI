@@ -1,11 +1,11 @@
-import Spline from "@splinetool/react-spline";
+import { ExpandableCardDemo } from "@/components/news/expandableCardDemo";
+// import { GlobeDemo } from  '../components/globe/GlobeDemo.jsx'
 
 function News() {
-  return (
-    <div className="h-full bg-red-400 ">
-      <Spline scene="https://prod.spline.design/B5avrzRXvs85y41M/scene.splinecode" />
-    </div>
-  );
+  return <>
+    <ExpandableCardDemo></ExpandableCardDemo>
+    {/* <GlobeDemo></GlobeDemo> */}
+  </>;
 }
 
 export default News;
