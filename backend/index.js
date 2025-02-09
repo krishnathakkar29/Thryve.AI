@@ -10,6 +10,9 @@ import taskRoutes from "./routes/task.routes.js";
 import todoRoutes from "./routes/todo.routes.js";
 import teamRoutes from "./routes/team.routes.js";
 import chatRoutes from "./routes/chatmessage.routes.js";
+import { isAuthenticated } from "./middlewares/auth.middleware.js";
+import { multerUpload } from "./lib/cloudinary.js";
+import { downS3, uploadS3 } from "./common.js";
 
 const app = express();
 
@@ -38,6 +41,9 @@ app.use("/api/task", taskRoutes);
 app.use("/api/todo", todoRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/chat", chatRoutes);
+
+app.post("/upload/s3", multerUpload.single("file"), isAuthenticated, uploadS3);
+app.get("/download/s3/:file_key", isAuthenticated, downS3);
 
 app.use(errorMiddleware);
 
