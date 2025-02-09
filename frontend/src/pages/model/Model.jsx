@@ -4,7 +4,6 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Image, OrbitControls } from "@react-three/drei";
 import { easing } from "maath";
 import "./util";
-
 function Model() {
   return (
     <Canvas className="" camera={{ position: [0, 0, 20], fov: 15 }}>
@@ -60,11 +59,11 @@ function Scene() {
   );
 }
 
-function Carousel({ radius = 1.4, count = 8 }) {
+function Carousel({ radius = 1.4, count = 5 }) {
   return Array.from({ length: count }, (_, i) => (
     <Card
       key={i}
-      url={`/img1_.jpg`}
+      url={`../.../landingimgs/${i + 1}.jpg`}
       position={[
         Math.sin((i / count) * Math.PI * 2) * radius,
         0,

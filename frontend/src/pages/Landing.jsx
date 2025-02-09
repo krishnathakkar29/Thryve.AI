@@ -40,7 +40,7 @@ function Landing() {
         </div>
       </section>
 
-      <div>
+      <div className="w-full h-screen bg-[#EDE7DB]">
         <Model />
       </div>
     </div>
