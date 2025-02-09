@@ -9,6 +9,7 @@ import userRoutes from "./routes/user.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import todoRoutes from "./routes/todo.routes.js";
 import teamRoutes from "./routes/team.routes.js";
+import chatRoutes from "./routes/chatmessage.routes.js";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/task", taskRoutes);
 app.use("/api/todo", todoRoutes);
 app.use("/api/team", teamRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use(errorMiddleware);
 

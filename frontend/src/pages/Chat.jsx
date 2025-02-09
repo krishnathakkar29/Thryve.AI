@@ -127,11 +127,18 @@ import { File, Send, Loader2 } from "lucide-react";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import userAvatar from "../assets/avatar.png";
 import botAvatar from "../assets/avatar.png";
-import { useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { api } from "@/App";
 
 function Chat() {
   // States
+  const queryClient = new QueryClient();
   const [messages, setMessages] = useState([
     {
       id: 1,

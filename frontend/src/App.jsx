@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import ProtectRoute from "./layout/protect-route";
 import { Loader2 } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -45,6 +45,24 @@ function App() {
     },
   });
 
+  const {
+    data: chatHistory,
+    isLoading: isLoadingHistory,
+    refetch,
+  } = useQuery({
+    queryKey: ["chatHistory"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/history`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch chat history");
+      }
+      const data = await response.json();
+      return data.data;
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -62,7 +80,7 @@ function App() {
               path="/dashboard"
               element={authUser ? <Dashboard /> : <Navigate to="/signin" />}
             />
-             <Route
+            <Route
               path="/report"
               element={authUser ? <Report /> : <Navigate to="/signin" />}
             />
