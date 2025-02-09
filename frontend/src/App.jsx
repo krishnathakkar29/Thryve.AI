@@ -15,6 +15,7 @@ import axios from "axios";
 import ProtectRoute from "./layout/protect-route";
 import { Loader2 } from "lucide-react";
 import { Suspense, useEffect } from "react";
+import Landing from "./pages/Landing";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -75,6 +76,7 @@ function App() {
     <>
       <Suspense fallback={<Loader2 className="animate-spine" size="md" />}>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route element={<Layout />}>
             <Route
               path="/dashboard"

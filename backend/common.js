@@ -42,12 +42,15 @@ export const uploadS3 = TryCatch(async (req, res) => {
   console.log(hello);
   // Construct public URL (if bucket is public)
   const publicUrl = `https://loctest090224.s3.eu-north-1.amazonaws.com/${fileKey}`;
+  console.log(fileKey);
   console.log(publicUrl);
 
   const response = await axios.post(
     `https://southern-filme-attempts-peak.trycloudflare.com/route_request`,
     {
       FILELINK: publicUrl,
+      bucketname: "loctest090224",
+      aws_object_id: fileKey,
     },
     {
       headers: {
