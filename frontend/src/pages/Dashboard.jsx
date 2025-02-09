@@ -1,7 +1,9 @@
 import React from "react";
-
+import GoogleCalendar from "@/components/dashboard/GoogleCalendar";
 function Dashboard() {
-  return <div>Dashboard</div>;
+  return <div>
+< GoogleCalendar />
+  </div>;
 }
 
 export default Dashboard;
