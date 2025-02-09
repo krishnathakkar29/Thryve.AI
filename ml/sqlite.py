@@ -1,7 +1,7 @@
 import sqlite3
 
 # Connect to SQLite database (or create it if it doesn't exist)
-connection = sqlite3.connect("Startup.db")
+connection = sqlite3.connect("CompanyDB.db")
 cursor = connection.cursor()
 
 # Create EmployeeTable
@@ -11,7 +11,12 @@ CREATE TABLE IF NOT EXISTS EmployeeTable (
     Name TEXT,
     Age INTEGER,
     Role TEXT,
-    TeamID INTEGER
+    email TEXT,             
+    phone INTEGER,
+    TeamID INTEGER,
+    paidLeaves INTEGER,
+    daysWorked INTEGER,      
+    daysSinceLeave INTEGER
 );
 """
 cursor.execute(table_info)
@@ -50,15 +55,16 @@ CREATE TABLE IF NOT EXISTS Projects (
 );
 """)
 # Insert data into EmployeeTable
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP001', 'Tony Stark', 45, 'CEO', 1)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP002', 'Steve Rogers', 38, 'Manager', 1)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP003', 'Bruce Banner', 40, 'Employee', 1)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP004', 'Natasha Romanoff', 35, 'HR', 2)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP005', 'Clint Barton', 39, 'Employee', 2)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP006', 'Peter Parker', 25, 'Employee', 2)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP007', 'Wanda Maximoff', 30, 'HR', 3)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP008', 'Vision', 35, 'Manager', 3)")
-cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, TeamID) VALUES ('EMP009', 'Sam Wilson', 33, 'Employee', 3)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP001', 'Rajesh Sharma', 45, 'CEO', 'rajesh.sharma@company.com', 9876543201, 1, 15, 320, 150)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP002', 'Anjali Verma', 40, 'Manager', 'anjali.verma@company.com', 9876543202, 2, 12, 280, 200)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP003', 'Suresh Iyer', 38, 'HR', 'suresh.iyer@company.com', 9876543203, 3, 10, 350, 180)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP004', 'Neha Gupta', 35, 'Manager', 'neha.gupta@company.com', 9876543204, 2, 14, 290, 220)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP005', 'Vikram Reddy', 22, 'Intern', 'vikram.reddy@company.com', 9876543205, 4, 5, 150, 300)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP006', 'Priya Nair', 30, 'HR', 'priya.nair@company.com', 9876543206, 3, 8, 330, 120)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP007', 'Amitabh Joshi', 37, 'Manager', 'amitabh.joshi@company.com', 9876543207, 2, 11, 310, 250)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP008', 'Rohit Desai', 25, 'Intern', 'rohit.desai@company.com', 9876543208, 4, 6, 200, 340)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP009', 'Sneha Patil', 33, 'HR', 'sneha.patil@company.com', 9876543209, 3, 9, 290, 160)")
+cursor.execute("INSERT INTO EmployeeTable (EmpID, Name, Age, Role, email, phone, TeamID, paidLeaves, daysWorked, daysSinceLeave) VALUES ('EMP010', 'Kavya Mehta', 28, 'Intern', 'kavya.mehta@company.com', 9876543210, 4, 7, 170, 370)")
 
 # Insert data into Teams (only 3 teams)
 cursor.execute("INSERT INTO Teams (name, teamIcon, manager_id) VALUES ('Cloud Engineering', 'cloud_icon.png', 'EMP002')")

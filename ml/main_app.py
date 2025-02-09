@@ -22,13 +22,17 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain_google_genai import ChatGoogleGenerativeAI
 import google.generativeai as genai
 from langchain.chains.summarize import load_summarize_chain
+import sqlite3
+from flask import Flask, request, jsonify
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+import json
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-from flask_cors import CORS  # Import CORS
-
+from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
-
 def get_gemini_response(question, prompt):
     model = genai.GenerativeModel("gemini-pro")
     response = model.generate_content([prompt, question])
@@ -133,16 +137,18 @@ def IT_conversational_chain():
 
 def classify_intent(question):
     classification_prompt = """
-    You are an AI that classifies user questions into one of the following categories:
-    - IT: If the question is related to IT policies, software, or technical support.
-    - HR: If the question is related to employee benefits, policies, or HR-related queries.
-    - SQL: If the question requires retrieving data from a SQL database.
-    - Minutes: If the question requires generation of meeting minutes from uploaded doc.
-    - Unknown: If the question doesn't fit into the above categories.
-
-    Return only the category name (IT, HR, SQL, or Unknown) without any additional text.
-
-    User question: {question}
+    You are an AI that classifies user queries into these categories:
+    - IT: Related to IT policies, software, or technical support.
+    - HR: About employee benefits, policies, or HR-related queries.
+    - SQL: Queries requiring data retrieval from a SQL database.
+    - Minutes: Request for generating meeting minutes from an uploaded document.
+    - Leave: if the word leave is there in the question classify it as this. Requests for leave (casual, sick, vacation, emergency, etc.).
+    - Payroll: Questions about salary, deductions, or payroll processing.
+    - General: Apart from Leave, Greetings or non-office-related questions.
+    
+    User Question: {question}
+    
+    Return ONLY the category name (IT, HR, SQL, Minutes, Leave, Payroll, General).
     """
 
     model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
@@ -168,6 +174,122 @@ def extract_text_from_pdf(pdf_path):
                 text += extracted + "\n"
     return text
 
+
+def get_employee_leave_details(emp_name):
+    """Fetch employee details from the database."""
+    conn = sqlite3.connect("CompanyDB.db")
+    cursor = conn.cursor()
+    
+    query = """
+    SELECT Name, paidLeaves, daysWorked, daysSinceLeave 
+    FROM EmployeeTable 
+    WHERE Name = ?
+    """
+    cursor.execute(query, (emp_name,))
+    result = cursor.fetchone()
+    conn.close()
+    return result
+
+import json
+
+def extract_leave_details(user_request):
+    """Extract start date, end date, and reason from the user's request using Gemini AI."""
+    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
+    prompt = PromptTemplate(template="""
+    Extract the leave start date, end date, and reason from the following leave request:
+    "{user_request}"
+    
+    Return the result in this JSON format:
+    {{"start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "reason": "reason text"}}
+    """, input_variables=["user_request"])
+    
+    chain = LLMChain(llm=model, prompt=prompt)
+    response = chain.run({"user_request": user_request})
+
+    # Debugging: Print the raw response
+    print("Gemini raw response:", response)
+
+    # Ensure response is a valid JSON string and extract the relevant part
+    try:
+        response_cleaned = response.strip("```json").strip("```").strip()
+        leave_details = json.loads(response_cleaned)  # Safe JSON parsing
+        return leave_details
+    except json.JSONDecodeError:
+        print("JSON parsing error. Invalid format received.")
+        return None
+
+
+def evaluate_leave_request(emp_name, start_date, end_date):
+    """Evaluate leave eligibility based on company policy."""
+    emp_details = get_employee_leave_details(emp_name)
+    
+    if not emp_details:
+        return {"approved": False, "reason": f"Employee {emp_name} not found."}
+    
+    name, paid_leaves, days_worked, days_since_leave = emp_details
+    
+    approval = True
+    reason = ""
+    
+    if paid_leaves <= 0:
+        approval = False
+        reason = "No paid leaves remaining."
+    elif days_since_leave < 30:
+        approval = False
+        reason = "Leave taken too recently."
+    elif days_worked < 240:
+        approval = False
+        reason = "Not enough days worked to be eligible."
+    
+    return {"approved": approval, "reason": reason}
+
+def generate_leave_certificate(name, start_date, end_date, reason):
+    """Generate a leave certificate if approved."""
+    return f"""
+    LEAVE CERTIFICATE
+    
+    To Whom It May Concern,
+    
+    This is to certify that {name} was granted leave from {start_date} to {end_date} due to {reason}.
+    
+    During this period, they were officially excused from their duties.
+    
+    Authorized Signatory,
+    [Company Name]
+    """
+
+@app.route("/leave_request", methods=["POST"])
+def leave_request_handler():
+    """API Endpoint to process leave requests."""
+    data = request.get_json()
+    
+    # Debugging: Print received request data
+    print("Received data:", data)
+
+    emp_name = data.get("employee_name")
+    user_request = data.get("question")
+
+    # Validate input fields
+    if not emp_name or not user_request:
+        return jsonify({"error": "Missing 'employee_name' or 'question' in request."}), 400
+    
+    # Extract leave details from request using Gemini
+    leave_details = extract_leave_details(user_request)
+    
+    # Debugging: Print extracted leave details
+    print("Extracted leave details:", leave_details)
+
+    if not leave_details or "start_date" not in leave_details or "end_date" not in leave_details or "reason" not in leave_details:
+        return jsonify({"error": "Could not extract valid leave details (start_date, end_date, reason)."}), 400
+    
+    # Evaluate leave eligibility
+    evaluation = evaluate_leave_request(emp_name, leave_details['start_date'], leave_details['end_date'])
+
+    if evaluation["approved"]:
+        certificate = generate_leave_certificate(emp_name, leave_details['start_date'], leave_details['end_date'], leave_details['reason'])
+        return jsonify({"approved": True, "response": certificate}), 200
+    else:
+        return jsonify({"approved": False, "response": f"Leave Request Denied: {evaluation['reason']}"}), 200
 def generate_meeting_minutes(transcript: str) -> str:
     """
     Generates meeting minutes by summarizing the provided transcript using 
@@ -195,7 +317,21 @@ def generate_meeting_minutes(transcript: str) -> str:
     minutes = chain.run(docs)
     minutes = minutes.replace("*", "")
     return minutes
-
+def general_conversational_chain():
+    prompt_template = """
+    You are a corporate AI agent designed to ease up employee queries and tasks. Answer politely to greetings and general corporate related questions.
+    if anything not related to corporate is asked, just say 'Sorry, I can't answer that.' 
+    Context:
+    {context}
+    
+    Question:
+    {question}
+    
+    Answer:
+    """
+    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
+    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+    return load_qa_chain(model, chain_type="stuff", prompt=prompt)
 def save_minutes_as_pdf(minutes_text, pdf_filename="meeting_minutes.pdf"):
     """Saves the meeting minutes text to a formatted PDF."""
     pdf = FPDF()
@@ -214,6 +350,8 @@ def save_minutes_as_pdf(minutes_text, pdf_filename="meeting_minutes.pdf"):
     
     pdf.output(pdf_filename)
     return pdf_filename
+import boto3
+
 
 @app.route("/generate_minutes", methods=["POST"])
 def generate_minutes_endpoint():
@@ -239,40 +377,45 @@ def generate_minutes_endpoint():
     
     # Generate meeting minutes by summarizing the transcript
     minutes = generate_meeting_minutes(transcript)
-    
+    return jsonify({'response':minutes})
     # Convert the meeting minutes to a PDF
-    minutes_pdf_filename = f"minutes_{file.filename}.pdf"
-    minutes_pdf_path = os.path.join(RESULT_FOLDER, minutes_pdf_filename)
-    save_minutes_as_pdf(minutes, minutes_pdf_path)
-    
-    # Return the generated PDF
-    return send_file(minutes_pdf_path, as_attachment=True)
+    # minutes_pdf_filename = f"minutes_{file.filename}"
+    # print(minutes_pdf_filename)
+    # minutes_pdf_path = os.path.join(RESULT_FOLDER, minutes_pdf_filename)
+    # print(minutes_pdf_path)
+    # save_minutes_as_pdf(minutes, minutes_pdf_path)
+    # data = request.get_json()
+    # s3 = boto3.client('s3', region_name='eu-north-1')
+    # print(file.filename)
+    # print(minutes_pdf_filename)
+    # s3.upload_file(minutes_pdf_path,data[bucketname],minutes_pdf_filename)
+    # return jsonify({"FILELINK": f"https://loctest090224.s3.eu-north-1.amazonaws.com/uploads/{minutes_pdf_filename}"})
+
 @app.route("/route_request", methods=["POST"])
 def route_request():
+    forward_url = None  # Initialize forward_url
     try:
-        # Check if a file is uploaded
-        if "file" in request.files:
-            file = request.files["file"]
-            if file.filename == "":
-                return jsonify({"error": "No selected file"}), 400
-            
-            category = "Minutes"  # If a file is uploaded, assume it's for minutes generation
-            
-            if category == "Minutes":
-                forward_url = "http://localhost:5000/generate_minutes"
-                
-                # Forward the file using a request to the appropriate endpoint
-                files = {"file": (file.filename, file.stream, file.mimetype)}
-                response = requests.post(forward_url, files=files)
-                
-                return response.content, response.status_code
-            
-            return jsonify({"error": "Invalid file input"}), 400
-        
-        # If no file, process a text question
         data = request.get_json()
-        user_question = data.get("question", "").strip()
+        if not data:
+            return jsonify({"error": "Invalid request payload"}), 400
 
+        first_key = next(iter(data.keys()), None)
+
+        if first_key == "FILELINK":  # Handle S3 PDF retrieval
+            url = data["FILELINK"]
+            response = requests.get(url)
+
+            with open("file.pdf", "wb") as file:
+                file.write(response.content)
+
+            print("Download complete!")
+            with open('file.pdf', "rb") as pdf_file:
+                files = {"file": ('file.pdf', pdf_file, "application/pdf")}
+                forward_url = "http://localhost:5000/generate_minutes"
+                response = requests.post(forward_url, files=files, json=data)
+                return response.content, response.status_code
+
+        user_question = data.get("question", "").strip()
         if not user_question:
             return jsonify({"error": "No question provided"}), 400
 
@@ -284,23 +427,62 @@ def route_request():
             forward_url = "http://localhost:5000/HRAgent"
         elif category == "SQL":
             forward_url = "http://localhost:5000/sqlAgent"
+        elif category == "Leave":
+            employee_name = data.get("employee_name", "").strip()
+            forward_url = "http://localhost:5000/leave_request"
+            response = requests.post(forward_url, json={"employee_name": employee_name, "question": user_question})
+            return response.json(), response.status_code
         elif category == "Minutes":
             return jsonify({"error": "Minutes category requires a PDF file"}), 400
         else:
-            return jsonify({"error": "Unable to classify the question"}), 400
+            forward_url = "http://localhost:5000/GpAgent"
 
-        # Forward request to the appropriate endpoint
         response = requests.post(forward_url, json={"question": user_question})
         return response.json(), response.status_code
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        # Use forward_url safely, knowing it might be None.
+        if forward_url:
+            print(f"Error while forwarding request to {forward_url}: {e}")
+        else:
+            print(f"Error before determining forward_url: {e}")
         return jsonify({"error": str(e)}), 500
-@app.route("/get",methods = ["GET"])
-def hello():
-    return 'Hello'
 
+
+@app.route("/GpAgent", methods=["POST"])
+def GP_ask():
+    """
+    Endpoint to answer questions based on the content of the employee handbook.
+    The request JSON should include a key "question" with the user's query.
+    """
+    try:
+        data = request.get_json()
+        user_question = data.get("question", "")
+        if 'leave' in user_question.lower():
+            employee_name = data.get("employee_name", "").strip()
+            print(employee_name,user_question)
+            response = requests.post("http://localhost:5000/leave_request", json={"employee_name": employee_name, "question": user_question})
+            return response.json(), response.status_code
+        if not user_question:
+            return jsonify({"error": "No question provided"}), 400
+
+        # Load the vector store built from the employee handbook PDF
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        vector_store = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+        
+        # Perform similarity search for relevant document chunks
+        docs = vector_store.similarity_search(user_question)
+
+        # Get the QA chain and generate an answer
+        chain = general_conversational_chain()
+        response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
+
+        return jsonify({"response": response["output_text"]}), 200
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # Log the full error to the Flask console.
+        return jsonify({"error": str(e)}), 500
 @app.route("/ITAgent", methods=["POST"])
 def IT_ask():
     """
@@ -395,7 +577,7 @@ def ask():
         return jsonify({"error": "No question provided"}), 400
     
     sql_query = get_gemini_response(question, PROMPT)
-    response = read_sql_query(sql_query, "Startup.db")
+    response = read_sql_query(sql_query, "CompanyABC.db")
     return jsonify({"sql_query": sql_query, "response": response})
 
 if __name__ == "__main__":

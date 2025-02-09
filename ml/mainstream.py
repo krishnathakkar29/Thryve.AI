@@ -1,47 +1,58 @@
 import streamlit as st
 import requests
 
+# URL for your Flask backend's route_request endpoint
 BACKEND_URL = "http://localhost:5000/route_request"
 
-st.title("AI-Powered Query & Meeting Minutes Generator")
+st.title("Flask Backend Test")
 
-# File Upload for Meeting Minutes
-st.header("Upload a PDF for Meeting Minutes")
-uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+# --- Section: Test Text-Based Request ---
+st.subheader("Test Text-Based Request")
+employee_name = st.text_input("Employee Name (if applicable):")
+question = st.text_input("Enter your question:")
 
-if uploaded_file:
-    st.write("Processing your file...")
-
-    # Send the file to the backend
-    files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
-    response = requests.post(BACKEND_URL, files=files)
-
-    if response.status_code == 200:
-        st.success("Meeting minutes generated successfully!")
-        st.download_button(
-            label="Download Minutes PDF",
-            data=response.content,
-            file_name="meeting_minutes.pdf",
-            mime="application/pdf",
-        )
+if st.button("Submit Question"):
+    if question.strip():
+        try:
+            # Send both question and employee_name to the backend
+            payload = {"employee_name": employee_name, "question": question}
+            response = requests.post(BACKEND_URL, json=payload)
+            if response.ok:
+                try:
+                    result = response.json()
+                    st.success("Response:")
+                    st.json(result)
+                except Exception:
+                    st.text("Response: " + response.text)
+            else:
+                st.error("Error: " + response.text)
+        except Exception as e:
+            st.error("Exception: " + str(e))
     else:
-        st.error("Error generating minutes: " + response.text)
+        st.error("Please enter a question.")
 
-# Text Input for Query Classification
-st.header("Ask a Question")
-user_question = st.text_input("Enter your query:")
+# --- Section: Test PDF Upload for Minutes Generation ---
+st.subheader("Test PDF Upload (Minutes Generation)")
+uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
-if st.button("Submit Query"):
-    if user_question.strip():
-        # Send the query to the backend
-        response = requests.post(BACKEND_URL, json={"question": user_question})
-        
-        if response.status_code == 200:
-            st.success("Response Received:")
-            st.json(response.json())
-        else:
-            st.error("Error: " + response.text)
+if st.button("Submit File"):
+    if uploaded_file is not None:
+        try:
+            files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
+            response = requests.post(BACKEND_URL, files=files)
+            if response.ok:
+                st.success("File processed successfully!")
+                # If the response is a PDF file (meeting minutes), offer a download button
+                if "application/pdf" in response.headers.get("Content-Type", ""):
+                    st.download_button("Download Generated PDF",
+                                       data=response.content,
+                                       file_name="generated_minutes.pdf",
+                                       mime="application/pdf")
+                else:
+                    st.write("Response:", response.text)
+            else:
+                st.error("Error: " + response.text)
+        except Exception as e:
+            st.error("Exception: " + str(e))
     else:
-        st.warning("Please enter a valid question.")
-
-st.write("🚀 Powered by AI & Flask Backend")
+        st.error("Please upload a PDF file.")
