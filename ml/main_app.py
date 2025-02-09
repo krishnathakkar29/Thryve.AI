@@ -420,7 +420,7 @@ def route_request():
             return jsonify({"error": "No question provided"}), 400
 
         category = classify_intent(user_question)
-
+        employee_name = data.get("employee_name", "").strip()
         if category == "IT":
             forward_url = "http://localhost:5000/ITAgent"
         elif category == "HR":
@@ -428,16 +428,14 @@ def route_request():
         elif category == "SQL":
             forward_url = "http://localhost:5000/sqlAgent"
         elif category == "Leave":
-            employee_name = data.get("employee_name", "").strip()
             forward_url = "http://localhost:5000/leave_request"
-            response = requests.post(forward_url, json={"employee_name": employee_name, "question": user_question})
             return response.json(), response.status_code
         elif category == "Minutes":
             return jsonify({"error": "Minutes category requires a PDF file"}), 400
         else:
             forward_url = "http://localhost:5000/GpAgent"
 
-        response = requests.post(forward_url, json={"question": user_question})
+        response = requests.post(forward_url, json={"employee_name": employee_name, "question": user_question})
         return response.json(), response.status_code
 
     except Exception as e:
