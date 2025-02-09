@@ -1,8 +1,8 @@
 import home from '../gif/home.png'
 import nameAi from '../gif/nameAi.png'
-import policy from '../gif/policy.png'
+import task from '../gif/task.png'
 import file from '../gif/file.png'
-import headset from '../gif/headset.png'
+import news from '../gif/news.png'
 import setting from '../gif/settings.png'
 
 export const data = {
@@ -13,28 +13,28 @@ export const data = {
       items: [
         {
           title: "Home",
-          url: "/home",
+          url: "/dashboard",
           img: home, // Use imported image directly
         },
         {
-          title: "Name Of AI",
-          url: "/nameAi",
+          title: "Thryve",
+          url: "/chat",
           img: nameAi,
         },
         {
-          title: "HR policies",
-          url: "/policy",
-          img: policy,
+          title: "Task Manager",
+          url: "/tasks",
+          img: task,
         },
         {
           title: "File Manager",
-          url: "/file",
+          url: "/report",
           img: file,
         },
         {
-          title: "Tech Support",
-          url: "/support",
-          img: headset,
+          title: "Recent News",
+          url: "/news",
+          img: news,
         },
       ],
     },
